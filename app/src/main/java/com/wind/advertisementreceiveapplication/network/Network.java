@@ -38,7 +38,7 @@ public class Network {
         Gson gson = gb.setLenient().create();
         if (mDownloadVideoApi == null) {
             Retrofit retrofit = new Retrofit.Builder()
-                    .baseUrl("http://192.168.31.109:8080")
+                    .baseUrl(Constants.BASE_URL)
                     .addConverterFactory(GsonConverterFactory.create(gson))
                     .addCallAdapterFactory(mRxjavaCallAdapterFactory)
                     .client(mOkHttpClient)

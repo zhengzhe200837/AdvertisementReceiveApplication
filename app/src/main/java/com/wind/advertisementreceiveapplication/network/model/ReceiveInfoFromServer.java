@@ -8,16 +8,16 @@ public class ReceiveInfoFromServer {
     private String url = null;
     private String playTime = null;
     private int order_status = -1;
-    private String videoName;
-    public ReceiveInfoFromServer(String url, String playTime, int order_status, String videoName) {
+    private String name;
+    public ReceiveInfoFromServer(String url, String playTime, int order_status, String name) {
         this.url = url;
         this.playTime = playTime;
         this.order_status = order_status;
-        this.videoName = videoName;
+        this.name = name;
     }
 
     public String getVideoName() {
-        return videoName;
+        return name;
     }
 
     public int getOrderStatus() {

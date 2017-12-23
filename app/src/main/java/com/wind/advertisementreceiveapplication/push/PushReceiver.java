@@ -41,6 +41,11 @@ public class PushReceiver extends BroadcastReceiver {
                 String url = rifs.getUrl();
                 String name = rifs.getVideoName();
                 mCurrentVideoPlayTime = rifs.getPlayTime();
+//                try {
+//                    Thread.sleep(10000);
+//                } catch (Exception e) {
+//
+//                }
                 Network.downloadVideo(context, url, name, mCurrentVideoPlayTime);
                 android.util.Log.d("zz", "message = " + jsonObject.get("message"));
                 android.util.Log.d("zz", "url = " + url + " name = " + name);
