@@ -30,8 +30,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity"
-                android:theme="@android:style/Theme.NoDisplay">
+        <activity android:name=".MainActivity" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -41,7 +40,7 @@
 
         <activity
             android:name=".DisplayVideoActivity"
-            android:theme="@android:style/Theme.Black.NoTitleBar" >
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" >
         </activity>
 
         <service android:name=".service.PlayVideoService" >

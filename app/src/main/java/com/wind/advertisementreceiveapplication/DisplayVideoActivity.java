@@ -1,6 +1,7 @@
 package com.wind.advertisementreceiveapplication;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.view.Display;
@@ -9,6 +10,9 @@ import android.view.SurfaceView;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 
+import com.wind.advertisementreceiveapplication.constants.Constants;
+import com.wind.advertisementreceiveapplication.service.PlayVideoService;
+
 /**
  * Created by zhengzhe on 2017/12/14.
  */
@@ -16,6 +20,7 @@ import android.widget.FrameLayout;
 public class DisplayVideoActivity extends Activity implements SurfaceHolder.Callback {
     private SurfaceView mSurfaceView;
     private String mVideoPath;
+    private String mMinimunTime;
     public static final String VIDEOPATHKEY = "VIDEOPATHKEY";
     private SurfaceHolder mSurfaceHolder;
     private MediaPlayer mMediaPlayer;
@@ -23,17 +28,28 @@ public class DisplayVideoActivity extends Activity implements SurfaceHolder.Call
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        android.util.Log.d("zz", "DisplayVideoActivity + onCreate()");
         super.onCreate(savedInstanceState);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.display_video_activty_layout);
         mSurfaceView = (SurfaceView)findViewById(R.id.surface_view);
         mVideoPath = getIntent().getStringExtra(VIDEOPATHKEY);
+        //播放多个视频
+        mMinimunTime = getIntent().getStringExtra("minimum_time");
+        android.util.Log.d("zz", "DisplayVideoActivity + mMinimunTime = " + mMinimunTime);
         android.util.Log.d("zz", "DisplayVideoActivity + mVideoPath = " + mVideoPath);
         initMediaPlayer();
         mSurfaceHolder = mSurfaceView.getHolder();
         mSurfaceHolder.addCallback(this);
         mSurfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         mDisplay = this.getWindowManager().getDefaultDisplay();
+
+    }
+
+    private void startService() {
+        Intent intent = new Intent(this, PlayVideoService.class);
+        intent.putExtra("minimum_time", mMinimunTime);
+        startService(intent);
     }
 
     private void initMediaPlayer() {
@@ -59,32 +75,14 @@ public class DisplayVideoActivity extends Activity implements SurfaceHolder.Call
         mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
             @Override
             public void onPrepared(MediaPlayer mp) {
-                int originalVideoWidth = mMediaPlayer.getVideoWidth();
-                int originalVideoHeight = mMediaPlayer.getVideoHeight();
                 FrameLayout.LayoutParams lllp = (FrameLayout.LayoutParams)mSurfaceView.getLayoutParams();
-//                if(originalVideoWidth > mDisplay.getWidth() || originalVideoHeight > mDisplay.getHeight()) {
-//                    float wRatio = (float)originalVideoWidth/(float)mDisplay.getWidth();
-//                    float hRatio = (float)originalVideoHeight/(float)mDisplay.getHeight();
-//                    float ratio = Math.max(wRatio, hRatio);
-//                    int videoWidth = (int)Math.ceil((float)originalVideoWidth/ratio);
-//                    int videoHeight = (int)Math.ceil((float)originalVideoHeight/ratio);
-//                    lllp.width = videoWidth;
-//                    lllp.height = videoHeight;
-//                    mSurfaceView.setLayoutParams(lllp);
-//                    mMediaPlayer.start();
-//                } else {
-//                    lllp.width = originalVideoWidth;
-//                    lllp.height = originalVideoHeight;
-//                    mSurfaceView.setLayoutParams(lllp);
-//                    mMediaPlayer.start();
-//                }
                 mMediaPlayer.start();
             }
         });
         mMediaPlayer.setOnSeekCompleteListener(new MediaPlayer.OnSeekCompleteListener() {
             @Override
             public void onSeekComplete(MediaPlayer mp) {
-
+                android.util.Log.d("zz", "DisplayVideoActivity + onSeekComplete");
             }
         });
         mMediaPlayer.setOnVideoSizeChangedListener(new MediaPlayer.OnVideoSizeChangedListener() {
@@ -113,5 +111,14 @@ public class DisplayVideoActivity extends Activity implements SurfaceHolder.Call
 
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
+    }
+
+    @Override
+    protected void onDestroy() {
+        android.util.Log.d("zz", "DisplayVideoActivity + onDestroy()");
+        if (mMinimunTime != null) {
+            startService();
+        }
+        super.onDestroy();
     }
 }

@@ -4,34 +4,22 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Environment;
-import android.util.Log;
-
 import com.google.gson.Gson;
-import com.wind.advertisementreceiveapplication.constants.Constants;
 import com.wind.advertisementreceiveapplication.network.Network;
 import com.wind.advertisementreceiveapplication.network.model.ReceiveInfoFromServer;
-import com.wind.advertisementreceiveapplication.service.PlayVideoService;
-
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.io.File;
-import java.util.Calendar;
-
 import cn.jpush.android.api.JPushInterface;
 
 /**
  * Created by Administrator on 2016/7/2 0002.
  */
 public class PushReceiver extends BroadcastReceiver {
-    private Context mContext;
+    private String mCurrentVideoPlayTime;
 
     //当收到消息，会回调onReceive()方法,onReceive中解析
     @Override
     public void onReceive(Context context, Intent intent) {
-        mContext = context;
-
         Bundle bundle = intent.getExtras();
         android.util.Log.d("zz", "onReceive - " + intent.getAction());
         //注册
@@ -47,17 +35,16 @@ public class PushReceiver extends BroadcastReceiver {
             String extras = bundle.getString(JPushInterface.EXTRA_EXTRA);
             try {
                 JSONObject jsonObject = new JSONObject(extras);
-                String data = jsonObject.get("from").toString();
+                String data = jsonObject.get("message").toString();
                 Gson gson = new Gson();
                 ReceiveInfoFromServer rifs = gson.fromJson(data, ReceiveInfoFromServer.class);
                 String url = rifs.getUrl();
                 String name = rifs.getVideoName();
                 mCurrentVideoPlayTime = rifs.getPlayTime();
-                Network.downloadVideo(url, name);
-                android.util.Log.d("zz", "from = " + jsonObject.get("from"));
+                Network.downloadVideo(context, url, name, mCurrentVideoPlayTime);
+                android.util.Log.d("zz", "message = " + jsonObject.get("message"));
                 android.util.Log.d("zz", "url = " + url + " name = " + name);
                 android.util.Log.d("zz", "mCurrentVideoPlayTime = "  + mCurrentVideoPlayTime);
-                startPlayVideoService(name);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -82,16 +69,6 @@ public class PushReceiver extends BroadcastReceiver {
             android.util.Log.d("zz", "push + 5");
             android.util.Log.d("zz", "Unhandled intent - " + intent.getAction());
         }
-    }
-
-    private String mCurrentVideoPlayTime;
-    private void startPlayVideoService(String name) {
-        String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM)
-                + File.separator + "downloadVideo" + File.separator + name;
-        Intent intent = new Intent(mContext, PlayVideoService.class);
-        intent.putExtra(Constants.VIDEOPATH, path);
-        intent.putExtra("current_video_play_time", mCurrentVideoPlayTime);
-        mContext.startService(intent);
     }
 }
 
