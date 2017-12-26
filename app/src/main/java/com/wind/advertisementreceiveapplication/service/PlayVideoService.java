@@ -99,11 +99,13 @@ public class PlayVideoService extends Service {
             String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM)
                     + File.separator + "downloadVideo" + File.separator + minimumValue.getVideoName();
             int playTimes = minimumValue.getPlayTimes();
+            String orderId = minimumValue.getOrderId();
 
             Intent it = new Intent(this, DisplayVideoActivity.class);
             it.putExtra(Constants.MINIMUM_TIME, minimumkey);
             it.putExtra(Constants.VIDEOPATHKEY, path);
             it.putExtra(Constants.VIDEO_PLAY_TIMES, playTimes);
+            it.putExtra(Constants.VIDEO_ORDER_ID, orderId);
             PendingIntent pi = PendingIntent.getActivity(this, 0, it, PendingIntent.FLAG_UPDATE_CURRENT);  //PendingIntent.FLAG_UPDATE_CURRENT 次flag会更新Intent
 //            PendingIntent pi = PendingIntent.getActivity(this, 0, it, 0);  //flag 为0时不会更新itent,导致从activity返回的数据不变
             mAlarmManager.set(AlarmManager.RTC_WAKEUP, mCurrentVideoConvertPlayTime, pi);

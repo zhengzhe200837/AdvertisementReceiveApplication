@@ -6,7 +6,9 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.wind.advertisementreceiveapplication.constants.Constants;
 import com.wind.advertisementreceiveapplication.network.api.DownloadVideoApi;
+import com.wind.advertisementreceiveapplication.network.api.UploadPlayStatusApi;
 import com.wind.advertisementreceiveapplication.network.mapper.NetworkVideoResponseBodyMapper;
+import com.wind.advertisementreceiveapplication.network.model.PostModelUploadPlayStatus;
 import com.wind.advertisementreceiveapplication.network.model.ReceiveInfoFromServer;
 import com.wind.advertisementreceiveapplication.service.PlayVideoService;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -26,6 +28,35 @@ public class Network {
     private static DownloadVideoApi mDownloadVideoApi;
     private static CallAdapter.Factory mRxjavaCallAdapterFactory = RxJava2CallAdapterFactory.create();
     private static OkHttpClient mOkHttpClient = new OkHttpClient();
+    private static UploadPlayStatusApi mUploadPlayStatusApi;
+
+    public static void uploadPlayStatus(int orderStatus, String orderId) {
+        GsonBuilder gb = new GsonBuilder();
+        Gson gson = gb.setLenient().create();
+        if (mUploadPlayStatusApi == null) {
+            Retrofit retrofit = new Retrofit.Builder()
+                    .baseUrl(Constants.BASE_URL)
+                    .client(mOkHttpClient)
+                    .addConverterFactory(GsonConverterFactory.create(gson))
+                    .addCallAdapterFactory(mRxjavaCallAdapterFactory)
+                    .build();
+            mUploadPlayStatusApi = retrofit.create(UploadPlayStatusApi.class);
+        }
+        mUploadPlayStatusApi.uploadPlayStatus(new PostModelUploadPlayStatus(orderStatus, orderId))
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<String>() {
+                    @Override
+                    public void accept(String s) throws Exception {
+                        android.util.Log.d("zz", "Network + uploadPlayStatus() + s = " + s);
+                    }
+                }, new Consumer<Throwable>() {
+                    @Override
+                    public void accept(Throwable throwable) throws Exception {
+                        android.util.Log.d("zz", "Network + uploadPlayStatus() + error = " + throwable.toString());
+                    }
+                });
+    }
 
     public static void downloadVideo(final Context context, final ReceiveInfoFromServer rifs) {
         GsonBuilder gb = new GsonBuilder();

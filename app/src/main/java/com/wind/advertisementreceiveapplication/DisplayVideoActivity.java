@@ -10,6 +10,7 @@ import android.view.SurfaceView;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 import com.wind.advertisementreceiveapplication.constants.Constants;
+import com.wind.advertisementreceiveapplication.network.Network;
 import com.wind.advertisementreceiveapplication.service.PlayVideoService;
 
 /**
@@ -25,6 +26,7 @@ public class DisplayVideoActivity extends Activity implements SurfaceHolder.Call
     private Display mDisplay;
     private int mTotalPlayTimes = 1;
     private int mCurrentPlayTimes = 0;
+    private String mOrderId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,12 +37,14 @@ public class DisplayVideoActivity extends Activity implements SurfaceHolder.Call
         mSurfaceView = (SurfaceView)findViewById(R.id.surface_view);
         mVideoPath = getIntent().getStringExtra(Constants.VIDEOPATHKEY);
         mTotalPlayTimes = getIntent().getIntExtra(Constants.VIDEO_PLAY_TIMES, 1);
+        mOrderId = getIntent().getStringExtra(Constants.VIDEO_ORDER_ID);
 
         //播放多个视频
         mMinimunTime = getIntent().getStringExtra(Constants.MINIMUM_TIME);
         android.util.Log.d("zz", "DisplayVideoActivity + mMinimunTime = " + mMinimunTime);
         android.util.Log.d("zz", "DisplayVideoActivity + mVideoPath = " + mVideoPath);
         android.util.Log.d("zz", "DisplayVideoActivity + mTotalPlayTimes = " + mTotalPlayTimes);
+        android.util.Log.d("zz", "DisplayVideoActivity + mOrderId = " + mOrderId);
         initMediaPlayer();
         mSurfaceHolder = mSurfaceView.getHolder();
         mSurfaceHolder.addCallback(this);
@@ -69,6 +73,10 @@ public class DisplayVideoActivity extends Activity implements SurfaceHolder.Call
                 if (mCurrentPlayTimes == mTotalPlayTimes) {
                     mCurrentPlayTimes = 0;
                     mMediaPlayer.release();
+
+                    Network.uploadPlayStatus(1, mOrderId);  //已播放
+                    mOrderId = null;
+
                     finish();
                 }
             }
