@@ -9,7 +9,6 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
-
 import com.wind.advertisementreceiveapplication.constants.Constants;
 import com.wind.advertisementreceiveapplication.service.PlayVideoService;
 
@@ -21,10 +20,11 @@ public class DisplayVideoActivity extends Activity implements SurfaceHolder.Call
     private SurfaceView mSurfaceView;
     private String mVideoPath;
     private String mMinimunTime;
-    public static final String VIDEOPATHKEY = "VIDEOPATHKEY";
     private SurfaceHolder mSurfaceHolder;
     private MediaPlayer mMediaPlayer;
     private Display mDisplay;
+    private int mTotalPlayTimes = 1;
+    private int mCurrentPlayTimes = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,11 +33,14 @@ public class DisplayVideoActivity extends Activity implements SurfaceHolder.Call
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.display_video_activty_layout);
         mSurfaceView = (SurfaceView)findViewById(R.id.surface_view);
-        mVideoPath = getIntent().getStringExtra(VIDEOPATHKEY);
+        mVideoPath = getIntent().getStringExtra(Constants.VIDEOPATHKEY);
+        mTotalPlayTimes = getIntent().getIntExtra(Constants.VIDEO_PLAY_TIMES, 1);
+
         //播放多个视频
-        mMinimunTime = getIntent().getStringExtra("minimum_time");
+        mMinimunTime = getIntent().getStringExtra(Constants.MINIMUM_TIME);
         android.util.Log.d("zz", "DisplayVideoActivity + mMinimunTime = " + mMinimunTime);
         android.util.Log.d("zz", "DisplayVideoActivity + mVideoPath = " + mVideoPath);
+        android.util.Log.d("zz", "DisplayVideoActivity + mTotalPlayTimes = " + mTotalPlayTimes);
         initMediaPlayer();
         mSurfaceHolder = mSurfaceView.getHolder();
         mSurfaceHolder.addCallback(this);
@@ -48,7 +51,7 @@ public class DisplayVideoActivity extends Activity implements SurfaceHolder.Call
 
     private void startService() {
         Intent intent = new Intent(this, PlayVideoService.class);
-        intent.putExtra("minimum_time", mMinimunTime);
+        intent.putExtra(Constants.MINIMUM_TIME, mMinimunTime);
         startService(intent);
     }
 
@@ -57,7 +60,17 @@ public class DisplayVideoActivity extends Activity implements SurfaceHolder.Call
         mMediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mp) {
-                finish();
+                mCurrentPlayTimes++;
+                android.util.Log.d("zz", "DisplayVideoActivity + onCompletion() + mCurrentPlayTimes = " + mCurrentPlayTimes);
+                android.util.Log.d("zz", "DisplayVideoActivity + onCompletion() + mTotalPlayTimes = " + mTotalPlayTimes);
+                if (mCurrentPlayTimes < mTotalPlayTimes) {
+                    mMediaPlayer.start();
+                }
+                if (mCurrentPlayTimes == mTotalPlayTimes) {
+                    mCurrentPlayTimes = 0;
+                    mMediaPlayer.release();
+                    finish();
+                }
             }
         });
         mMediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
@@ -82,7 +95,6 @@ public class DisplayVideoActivity extends Activity implements SurfaceHolder.Call
         mMediaPlayer.setOnSeekCompleteListener(new MediaPlayer.OnSeekCompleteListener() {
             @Override
             public void onSeekComplete(MediaPlayer mp) {
-                android.util.Log.d("zz", "DisplayVideoActivity + onSeekComplete");
             }
         });
         mMediaPlayer.setOnVideoSizeChangedListener(new MediaPlayer.OnVideoSizeChangedListener() {

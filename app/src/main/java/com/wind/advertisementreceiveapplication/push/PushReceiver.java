@@ -15,8 +15,6 @@ import cn.jpush.android.api.JPushInterface;
  * Created by Administrator on 2016/7/2 0002.
  */
 public class PushReceiver extends BroadcastReceiver {
-    private String mCurrentVideoPlayTime;
-
     //当收到消息，会回调onReceive()方法,onReceive中解析
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -38,18 +36,7 @@ public class PushReceiver extends BroadcastReceiver {
                 String data = jsonObject.get("message").toString();
                 Gson gson = new Gson();
                 ReceiveInfoFromServer rifs = gson.fromJson(data, ReceiveInfoFromServer.class);
-                String url = rifs.getUrl();
-                String name = rifs.getVideoName();
-                mCurrentVideoPlayTime = rifs.getPlayTime();
-//                try {
-//                    Thread.sleep(10000);
-//                } catch (Exception e) {
-//
-//                }
-                Network.downloadVideo(context, url, name, mCurrentVideoPlayTime);
-                android.util.Log.d("zz", "message = " + jsonObject.get("message"));
-                android.util.Log.d("zz", "url = " + url + " name = " + name);
-                android.util.Log.d("zz", "mCurrentVideoPlayTime = "  + mCurrentVideoPlayTime);
+                Network.downloadVideo(context, rifs);
             } catch (JSONException e) {
                 e.printStackTrace();
             }

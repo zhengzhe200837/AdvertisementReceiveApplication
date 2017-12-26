@@ -2,19 +2,13 @@ package com.wind.advertisementreceiveapplication.network;
 
 import android.content.Context;
 import android.content.Intent;
-import android.os.Environment;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.wind.advertisementreceiveapplication.DisplayVideoActivity;
-import com.wind.advertisementreceiveapplication.MainActivity;
 import com.wind.advertisementreceiveapplication.constants.Constants;
 import com.wind.advertisementreceiveapplication.network.api.DownloadVideoApi;
 import com.wind.advertisementreceiveapplication.network.mapper.NetworkVideoResponseBodyMapper;
+import com.wind.advertisementreceiveapplication.network.model.ReceiveInfoFromServer;
 import com.wind.advertisementreceiveapplication.service.PlayVideoService;
-
-import java.io.File;
-
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.functions.Consumer;
 import io.reactivex.schedulers.Schedulers;
@@ -33,7 +27,7 @@ public class Network {
     private static CallAdapter.Factory mRxjavaCallAdapterFactory = RxJava2CallAdapterFactory.create();
     private static OkHttpClient mOkHttpClient = new OkHttpClient();
 
-    public static void downloadVideo(final Context context, String url, final String name, final String playTime) {
+    public static void downloadVideo(final Context context, final ReceiveInfoFromServer rifs) {
         GsonBuilder gb = new GsonBuilder();
         Gson gson = gb.setLenient().create();
         if (mDownloadVideoApi == null) {
@@ -45,16 +39,16 @@ public class Network {
                     .build();
             mDownloadVideoApi = retrofit.create(DownloadVideoApi.class);
         }
-        mDownloadVideoApi.downVideo(url)
+        mDownloadVideoApi.downVideo(rifs.getUrl())
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .map(new NetworkVideoResponseBodyMapper(name))
+                .map(new NetworkVideoResponseBodyMapper(rifs.getVideoName()))
                 .subscribe(new Consumer<String>() {
                     @Override
                     public void accept(String s) throws Exception {
                         android.util.Log.d("zz", "Network + downloadVideo() + s = " + s);
                         if ("success".equals(s)) {
-                            startPlayVideoService(context, name, playTime);
+                            startPlayVideoService(context, rifs);
                         }
                     }
                 }, new Consumer<Throwable>() {
@@ -65,12 +59,9 @@ public class Network {
                 });
     }
 
-    private static void startPlayVideoService(Context context, String name, String playTime) {
-        String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM)
-                + File.separator + "downloadVideo" + File.separator + name;
+    private static void startPlayVideoService(Context context, ReceiveInfoFromServer rifs) {
         Intent intent = new Intent(context, PlayVideoService.class);
-        intent.putExtra(Constants.VIDEOPATH, path);
-        intent.putExtra("current_video_play_time", playTime);
+        intent.putExtra(Constants.VIDEO_DATA, rifs);
         context.startService(intent);
     }
 }
