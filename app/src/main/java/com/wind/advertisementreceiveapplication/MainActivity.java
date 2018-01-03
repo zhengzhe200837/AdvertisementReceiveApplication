@@ -1,21 +1,46 @@
 package com.wind.advertisementreceiveapplication;
 
+import android.content.Intent;
+import android.os.Environment;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
-public class MainActivity extends AppCompatActivity {
+import com.wind.advertisementreceiveapplication.constants.Constants;
+
+import java.io.File;
+
+public class MainActivity extends AppCompatActivity implements ActivityCompat.OnRequestPermissionsResultCallback {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         requestPermission();
-        finish();
     }
 
     private void requestPermission() {
         ActivityCompat.requestPermissions(this, new String[] {
                 android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
                 android.Manifest.permission.READ_EXTERNAL_STORAGE,
-                android.Manifest.permission.MOUNT_UNMOUNT_FILESYSTEMS}, 1);
+                }, 1);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                                    int[] grantResults) {
+        android.util.Log.d("zz", "MainActivity + onRequestPermissionsResult + requestCode = " + requestCode);
+        for(int i = 0; i < grantResults.length; i++) {
+            android.util.Log.d("zz", "MainActivity + onRequestPermissionsResult + i = " + i + " result = " + grantResults[i]);
+        }
+        if (requestCode == 1) {
+            if (grantResults[0] == 0 && grantResults[1] == 0) {
+                Intent it = new Intent(this, DisplayVideoActivity.class);
+                String publicVideoPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM)
+                        + File.separator + "Camera" + File.separator + "test.mp4";
+                it.putExtra(Constants.VIDEOPATHKEY, publicVideoPath);
+                it.putExtra(Constants.PUBLIC_VIDEO, true);
+                startActivity(it);
+                finish();
+            }
+        }
     }
 }

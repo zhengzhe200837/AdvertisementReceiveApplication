@@ -28,6 +28,8 @@ public class DisplayVideoActivity extends Activity implements SurfaceHolder.Call
     private int mCurrentPlayTimes = 0;
     private String mOrderId;
 
+    private boolean isPublicVideo = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         android.util.Log.d("zz", "DisplayVideoActivity + onCreate()");
@@ -36,21 +38,29 @@ public class DisplayVideoActivity extends Activity implements SurfaceHolder.Call
         setContentView(R.layout.display_video_activty_layout);
         mSurfaceView = (SurfaceView)findViewById(R.id.surface_view);
         mVideoPath = getIntent().getStringExtra(Constants.VIDEOPATHKEY);
-        mTotalPlayTimes = getIntent().getIntExtra(Constants.VIDEO_PLAY_TIMES, 1);
-        mOrderId = getIntent().getStringExtra(Constants.VIDEO_ORDER_ID);
+        if (getIntent().hasExtra(Constants.VIDEO_PLAY_TIMES)
+                && getIntent().hasExtra(Constants.VIDEO_ORDER_ID)
+                && getIntent().hasExtra(Constants.MINIMUM_TIME)) {
+            mTotalPlayTimes = getIntent().getIntExtra(Constants.VIDEO_PLAY_TIMES, 1);
+            mOrderId = getIntent().getStringExtra(Constants.VIDEO_ORDER_ID);
+            //播放多个视频
+            mMinimunTime = getIntent().getStringExtra(Constants.MINIMUM_TIME);
+            android.util.Log.d("zz", "DisplayVideoActivity + mMinimunTime = " + mMinimunTime);
+            android.util.Log.d("zz", "DisplayVideoActivity + mTotalPlayTimes = " + mTotalPlayTimes);
+            android.util.Log.d("zz", "DisplayVideoActivity + mOrderId = " + mOrderId);
+        }
 
-        //播放多个视频
-        mMinimunTime = getIntent().getStringExtra(Constants.MINIMUM_TIME);
-        android.util.Log.d("zz", "DisplayVideoActivity + mMinimunTime = " + mMinimunTime);
         android.util.Log.d("zz", "DisplayVideoActivity + mVideoPath = " + mVideoPath);
-        android.util.Log.d("zz", "DisplayVideoActivity + mTotalPlayTimes = " + mTotalPlayTimes);
-        android.util.Log.d("zz", "DisplayVideoActivity + mOrderId = " + mOrderId);
-        initMediaPlayer();
+
+        if (getIntent().hasExtra(Constants.PUBLIC_VIDEO)) {
+            isPublicVideo = getIntent().getBooleanExtra(Constants.PUBLIC_VIDEO, false);
+        }
+        android.util.Log.d("zz", "DisplayVideoActivity + isPublicVideo = " + isPublicVideo);
+
         mSurfaceHolder = mSurfaceView.getHolder();
         mSurfaceHolder.addCallback(this);
         mSurfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         mDisplay = this.getWindowManager().getDefaultDisplay();
-
     }
 
     private void startService() {
@@ -61,42 +71,52 @@ public class DisplayVideoActivity extends Activity implements SurfaceHolder.Call
 
     private void initMediaPlayer() {
         mMediaPlayer = new MediaPlayer();
+        if (isPublicVideo) {
+            mMediaPlayer.setLooping(true);
+        }
         mMediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mp) {
-                mCurrentPlayTimes++;
-                android.util.Log.d("zz", "DisplayVideoActivity + onCompletion() + mCurrentPlayTimes = " + mCurrentPlayTimes);
-                android.util.Log.d("zz", "DisplayVideoActivity + onCompletion() + mTotalPlayTimes = " + mTotalPlayTimes);
-                if (mCurrentPlayTimes < mTotalPlayTimes) {
-                    mMediaPlayer.start();
-                }
-                if (mCurrentPlayTimes == mTotalPlayTimes) {
-                    mCurrentPlayTimes = 0;
-                    mMediaPlayer.release();
+                if (!isPublicVideo) {
+                    mCurrentPlayTimes++;
+                    android.util.Log.d("zz", "DisplayVideoActivity + onCompletion() + mCurrentPlayTimes = " + mCurrentPlayTimes);
+                    android.util.Log.d("zz", "DisplayVideoActivity + onCompletion() + mTotalPlayTimes = " + mTotalPlayTimes);
+                    if (mCurrentPlayTimes < mTotalPlayTimes) {
+                        mMediaPlayer.start();
+                    }
+                    if (mCurrentPlayTimes == mTotalPlayTimes) {
+                        mCurrentPlayTimes = 0;
+                        mMediaPlayer.release();
 
-                    Network.uploadPlayStatus(1, mOrderId);  //已播放
-                    mOrderId = null;
+                        Network.uploadPlayStatus(1, mOrderId);  //已播放
+                        mOrderId = null;
 
-                    finish();
+                        finish();
+                    }
                 }
             }
         });
         mMediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
             @Override
             public boolean onError(MediaPlayer mp, int what, int extra) {
+                android.util.Log.d("zz", "DisplayVideoActivity + onError() + what = " + what + " extra = " + extra);
                 return false;
             }
         });
         mMediaPlayer.setOnInfoListener(new MediaPlayer.OnInfoListener() {
             @Override
             public boolean onInfo(MediaPlayer mp, int what, int extra) {
+                android.util.Log.d("zz", "DisplayVideoActivity + onInfo() + what = " + what + " extra = " + extra);
                 return false;
             }
         });
         mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
             @Override
             public void onPrepared(MediaPlayer mp) {
-                FrameLayout.LayoutParams lllp = (FrameLayout.LayoutParams)mSurfaceView.getLayoutParams();
+                android.util.Log.d("zz", "DisplayVideoActivity + onPrepared() + isPublicVideo = " + isPublicVideo + " stopLocation = " + stopLocation);
+                if (isPublicVideo) {
+                    mMediaPlayer.seekTo(stopLocation);
+                }
                 mMediaPlayer.start();
             }
         });
@@ -120,6 +140,7 @@ public class DisplayVideoActivity extends Activity implements SurfaceHolder.Call
 
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
+        android.util.Log.d("zz", "DisplayVideoActivity + surfaceCreated() + isPublicVideo = " + isPublicVideo);
         mMediaPlayer.setDisplay(holder);
         mMediaPlayer.prepareAsync();
     }
@@ -129,14 +150,40 @@ public class DisplayVideoActivity extends Activity implements SurfaceHolder.Call
                                int height) {
     }
 
+    private int stopLocation = -1;
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
+        android.util.Log.d("zz", "DisplayVideoActivity + surfaceDestroyed + isPublicVideo = " + isPublicVideo);
+        if (isPublicVideo) {
+            stopLocation = mMediaPlayer.getCurrentPosition();
+            android.util.Log.d("zz", "DisplayVideoActivity + surfaceDestroyed() + isPublicVideo = " + isPublicVideo + " stopLocation = " + stopLocation);
+            mMediaPlayer.release();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        initMediaPlayer();
+        android.util.Log.d("zz", "DisplayVideoActivity + onResume() + isPublicVideo = " + isPublicVideo);
+        super.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        android.util.Log.d("zz", "DisplayVideoActivity + onPause() + isPublicVideo = " + isPublicVideo);
+        super.onPause();
+    }
+
+    @Override
+    protected void onStop() {
+        android.util.Log.d("zz", "DisplayVideoActivity + onStop() + isPublicVideo = " + isPublicVideo);
+        super.onStop();
     }
 
     @Override
     protected void onDestroy() {
-        android.util.Log.d("zz", "DisplayVideoActivity + onDestroy()");
-        if (mMinimunTime != null) {
+        android.util.Log.d("zz", "DisplayVideoActivity + onDestroy() + isPublicVideo = " + isPublicVideo);
+        if (!isPublicVideo && mMinimunTime != null) {
             startService();
         }
         super.onDestroy();
