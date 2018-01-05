@@ -6,9 +6,9 @@ package com.wind.advertisementreceiveapplication.constants;
 
 public class Constants {
     //http://192.168.31.109:8080    111.231.110.234:8080   192.168.31.233:8080
-    public static final String BASE_URL = "http://192.168.31.109:8089";
+    public static final String BASE_URL = "http://111.231.110.234:8080";
     //  /simpleDemo/HandleDataBaseServlet   /SharedAdvertisement/PushServlet
-    public static final String UPLOAD_PLAY_STATUS_INTERFACE = "/SharedAdvertisement/PushServlet";
+    public static final String UPLOAD_PLAY_STATUS_INTERFACE = "/simpleDemo/HandleDataBaseServlet";
 
     public static final String VIDEO_DATA = "VIDEO_DATA";
     public static final String VIDEO_PLAY_TIMES = "VIDEO_PLAY_TIMES";

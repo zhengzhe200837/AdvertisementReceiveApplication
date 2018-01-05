@@ -34,8 +34,9 @@ public class MainActivity extends AppCompatActivity implements ActivityCompat.On
         if (requestCode == 1) {
             if (grantResults[0] == 0 && grantResults[1] == 0) {
                 Intent it = new Intent(this, DisplayVideoActivity.class);
-                String publicVideoPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM)
-                        + File.separator + "Camera" + File.separator + "test.mp4";
+                android.util.Log.d("zz", "MainActivity + externalStorage = " + Environment.getExternalStorageDirectory());
+                String publicVideoPath = Environment.getExternalStorageDirectory()
+                        + File.separator + "bluetooth" + File.separator + "test.mp4";
                 it.putExtra(Constants.VIDEOPATHKEY, publicVideoPath);
                 it.putExtra(Constants.PUBLIC_VIDEO, true);
                 startActivity(it);
